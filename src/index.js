@@ -8,17 +8,18 @@ import logger from 'redux-logger';
 import axios from 'axios'
 import App from './App';
 import { takeEvery, put } from 'redux-saga/effects'
+import { takeLatest } from 'redux-saga/effects';
 // this startingPlantArray should eventually be removed
 const startingPlantArray = [
-  { id: 1, name: 'Rose' },
-  { id: 2, name: 'Tulip' },
-  { id: 3, name: 'Oak' }
+
 ];
 
 const plantList = (state = startingPlantArray, action) => {
   switch (action.type) {
     case 'ADD_PLANT':
-      return [ ...state, action.payload ]
+      return [...state, action.payload]
+    case 'SET_PLANTS':
+      return action.payload
     default:
       return state;
   }
@@ -26,16 +27,42 @@ const plantList = (state = startingPlantArray, action) => {
 
 function* fetchPlantList() {
   try {
-    const plants = yield axios.get('/plants');
-    yield put ({type: 'ADD_PLANT', payload: plants.data})
+    const plants = yield axios.get('/api/plant');
+    const action = { type: 'SET_PLANTS', payload: plants.data }
+    yield put(action);
   } catch (error) {
     console.log(`Error in fetchPlants ${error}`);
     alert('Something went wrong')
+    throw error
   }
+};
 
+function* sendPlantToServer(action) {
+  try {
+    yield axios.post('/api/plant', action.payload);
+    yield put({type: 'FETCH_PLANTS'})
+  } catch (error) {
+    console.log(`Error in addPlant ${error}`)
+    alert('Something went wrong')
+    throw error
+  }
+};
+
+function* deleteFromServer(action) {
+  try{
+    yield axios.delete(`/api/plant/${action.payload}`);
+    yield put({type:'FETCH_PLANTS'});
+  } catch (error) {
+    console.log(`Error in deleteFromServer ${error}`);
+    alert('Something went wrong');
+    throw error
+  }
 }
+
 function* rootSaga() {
-  yield takeEvery('FETCH_PLANTS', fetchPlantList)
+  yield takeLatest('FETCH_PLANTS', fetchPlantList);
+  yield takeLatest('SEND_PLANT_TO_SERVER', sendPlantToServer);
+  yield takeLatest('DELETE_PLANT', deleteFromServer)
 
 }
 

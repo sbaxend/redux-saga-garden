@@ -5,7 +5,7 @@ import { useDispatch, useSelector} from 'react-redux';
 function PlantList() {
     const dispatch = useDispatch();
 
-    // const reduxState = useSelector(store => store);
+    const plantList = useSelector(store => store.plantList);
 
     const getPlants=() => {
         dispatch({type: 'FETCH_PLANTS'})
@@ -16,10 +16,23 @@ function PlantList() {
         getPlants()
     }, []); 
 
+    const removePlant = (id) => {
+        dispatch({type: 'DELETE_PLANT', payload: id})
+
+    }
+
     return (
         <div>
             <h3>This is the plant list</h3>
-            <pre>{JSON.stringify(reduxState)}</pre>
+            {/* <pre>{JSON.stringify(reduxState)}</pre> */}
+            {
+                plantList.map(plant => (
+                    <div key={plant.id} >
+                        {plant.name}
+                        <button onClick={() => removePlant(plant.id)}>Remove</button>
+                        </div>
+                ))
+            }
         </div>
     );
 }
